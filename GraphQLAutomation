@@ -1,4 +1,3 @@
-
 import io.restassured.path.json.JsonPath;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -85,14 +84,12 @@ public class GraphQLAutomation {
                 assert id != null;
                 assert tokenAddress != null;
                 System.out.println("Assertion passed successfully.");
-            }
-           catch (Exception e) {
+            } catch (Exception e) {
                 System.out.println("Assertion failed: " + e.getMessage());
             }
             connection.disconnect();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
     }
 }
