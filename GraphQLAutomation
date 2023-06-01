@@ -1,0 +1,98 @@
+
+import io.restassured.path.json.JsonPath;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+
+public class GraphQLAutomation {
+
+    private static final String ENDPOINT = "https://devapi.airstack.xyz/gql";
+
+    public static void main(String[] args) {
+        String query = "query Test1($input: TokensInput!) {\n" +
+                "  Tokens(input: $input) {\n" +
+                "    Token {\n" +
+                "      id\n" +
+                "      address\n" +
+                "      chainId\n" +
+                "      name\n" +
+                "      symbol\n" +
+                "      type\n" +
+                "      totalSupply\n" +
+                "      decimals\n" +
+                "      baseURI\n" +
+                "      lastTransferTimestamp\n" +
+                "      lastTransferBlock\n" +
+                "      lastTransferHash\n" +
+                "      contractMetaData {\n" +
+                "        description\n" +
+                "      }\n" +
+                "      logo {\n" +
+                "        medium\n" +
+                "        original\n" +
+                "      }\n" +
+                "      tokenBalances {\n" +
+                "        tokenId\n" +
+                "        amount\n" +
+                "        blockchain\n" +
+                "      }\n" +
+                "    }\n" +
+                "    pageInfo {\n" +
+                "      prevCursor\n" +
+                "      nextCursor\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+
+        String variables = "{\n" +
+                "  \"input\": {\n" +
+                "    \"tokenIds\": [\"tokenId1\", \"tokenId2\"],\n" +
+                "    \"first\": 10\n" +
+                "  }\n" +
+                "}";
+
+        sendGraphQLQuery(query, variables);
+    }
+
+    private static void sendGraphQLQuery(String query, String variables) {
+        try {
+            URL url = new URL(ENDPOINT);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json");
+            connection.setDoOutput(true);
+            String responseBody = "";
+            String requestBody = String.format("{\"query\": \"%s\", \"variables\": %s}", query, variables);
+            connection.getOutputStream().write(requestBody.getBytes());
+
+            int responseCode = connection.getResponseCode();
+            System.out.println("Response Code: " + responseCode);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+            String line;
+            StringBuilder response = new StringBuilder();
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+            reader.close();
+            responseBody = response.toString();
+            System.out.println("Response Body: " + response.toString());
+            JsonPath jsonPath = new JsonPath(responseBody);
+            try {
+                String id = jsonPath.getString("data.Tokens.Token.id");
+                String tokenAddress = jsonPath.getString("data.Tokens.Token.address");
+                assert id != null;
+                assert tokenAddress != null;
+                System.out.println("Assertion passed successfully.");
+            }
+           catch (Exception e) {
+                System.out.println("Assertion failed: " + e.getMessage());
+            }
+            connection.disconnect();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+}
